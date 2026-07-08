@@ -1,7 +1,7 @@
 name: senpai-probe
 on:
   issue_comment:
-    types: [created]
+    types: [created, edited]
 concurrency:
   group: senpai-${{ github.event.issue.number }}
   cancel-in-progress: false
@@ -10,9 +10,13 @@ jobs:
     if: contains(github.event.comment.body, '/senpai') && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          echo "comment_created=${{ github.event.comment.created_at }}"
-          date -u +"job_step_ran=%Y-%m-%dT%H:%M:%SZ"
+      - env:
+          OLD_BODY: ${{ toJSON(github.event.changes.body.from) }}
+          NEW_BODY: ${{ toJSON(github.event.comment.body) }}
+        run: |
+          echo "action=${{ github.event.action }}"
+          echo "sender=${{ github.event.sender.login }}"
           echo "assoc=${{ github.event.comment.author_association }}"
-          echo "is_pr=${{ github.event.issue.pull_request != null }}"
-          uname -m; nproc
+          echo "OLD_BODY=$OLD_BODY"
+          echo "NEW_BODY=$NEW_BODY"
+          date -u +"job_step_ran=%Y-%m-%dT%H:%M:%SZ"
